@@ -1,0 +1,7 @@
+python3 label_attack_firewall.py attack_firewall_1.csv labelled_attack_firewall.csv 
+
+python3 label_attack_firewall.py attack_firewall_2.csv labelled_attack_firewall.csv 
+
+python3 label_attack_firewall.py attack_firewall_3.csv labelled_attack_firewall.csv 
+
+python3 divide_attack_firewall.py labelled_attack_firewall.csv training_labelled_attack_firewall.csv testing_labelled_attack_firewall.csv
