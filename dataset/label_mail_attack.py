@@ -19,7 +19,7 @@ known_ranges = {
     'ATTACK11': (1723028400, 1723032000)
 }
 
-# Function to convert 'src_time' string to Unix epoch time
+# Function to convert 'ts' string to Unix epoch time
 def datetime_string_to_epoch(dtstring):
     try:
         dt_obj = parser.isoparse(dtstring)
@@ -34,6 +34,7 @@ def assign_attack_label(unix_timestamp):
             return attack
     return 'NA'
 
+csv.field_size_limit(sys.maxsize)
 # Ensure a file path is provided via command-line argument
 if len(sys.argv) < 2:
     print("Usage: python script.py <input_csv_file>")
@@ -52,7 +53,8 @@ with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
     # Adding the new column to the header
     header = next(reader)
     header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
-    writer.writerow(header)
+    if len(outfile) == 0:
+        writer.writerow(header)
 
     for row in reader:
         row_str = ','.join(row)  # Convert list to string to search for 'ts'
@@ -71,10 +73,10 @@ with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
             except ValueError as e:
                 print(f"Error processing row: {e}")
                 #updated_row = row_str  # If an error occurs, leave the row unchanged
-                row.insert(0, 'NA')  # Insert 'N/A' if there's an error
+                row.insert(0, 'NA')  # Insert 'NA' if there's an error
         else:
-            #updated_row = row_str  # If no 'src_time' found, leave the row unchanged
-            row.insert(0, 'NA')  # Insert 'N/A' if no 'src_time' found
+            #updated_row = row_str  # If no 'ts' found, leave the row unchanged
+            row.insert(0, 'NA')  # Insert 'NA' if no 'ts' found
         # Convert updated_row back to a list and write to the output CSV
         writer.writerow(row)
 

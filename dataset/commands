@@ -9,3 +9,5 @@ python3 divide_attack_firewall.py labelled_attack_firewall.csv training_labelled
 python3 label_proxy_attack.py proxy_attack_chunks_1.csv labelled_proxy_attack.csv 
 
 python3 label_mail_attack.py proxy_mail_chunks_1.csv labelled_proxy_mail.csv
+
+python3 label_mail_attack.py proxy_mail_chunks_2.csv labelled_proxy_mail.csv
