@@ -3,6 +3,7 @@ import re
 import sys
 from datetime import datetime
 from dateutil import parser
+import os
 
 # Define the known attack timestamp ranges (Unix epoch time)
 known_ranges = {
@@ -45,6 +46,10 @@ input_file = sys.argv[1]
 
 output_file = sys.argv[2]  # Define the output file path
 
+# Initialize a dictionary to count occurrences of each attack label
+attack_counts = {label: 0 for label in known_ranges.keys()}
+attack_counts['NA'] = 0  # Add 'NA' to the dictionary
+
 # Read and process the CSV file using csv.reader
 with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
     reader = csv.reader(csvfile)
@@ -53,13 +58,13 @@ with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
     # Adding the new column to the header
     header = next(reader)
     header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
-    if len(outfile) == 0:
+    if os.path.getsize(output_file) == 0:
         writer.writerow(header)
 
     for row in reader:
-        row_str = ','.join(row)  # Convert list to string to search for 'ts'
+        row_str = ','.join(row)  # Convert list to string to search for ts
 
-        # Find the 'ts' in the row (assuming it's in the format: 'ts': 'Thu Jun 27 03:11:00 2024')
+        # Find the 'ts' in the row (assuming it's in the format: 'ts': '2024-08-27T01:59:44.052958+0200')
         match = re.search(r"'ts': '(.+?)'", row_str)
         
         if match:
@@ -68,15 +73,18 @@ with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
                 unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
                 attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
                 row.insert(0, attack_label)
-                # Replace 'src_time' value with the attack label in the row
+                attack_counts[attack_label] += 1
+                # Replace 'ts' value with the attack label in the row
                 #updated_row = re.sub(r"'ts': '(.+?)'", f"'{attack_label}'", row_str)
             except ValueError as e:
                 print(f"Error processing row: {e}")
                 #updated_row = row_str  # If an error occurs, leave the row unchanged
-                row.insert(0, 'NA')  # Insert 'NA' if there's an error
+                row.insert(0, 'NA')  # Insert 'N/A' if there's an error
+                attack_counts['NA'] += 1 
         else:
             #updated_row = row_str  # If no 'ts' found, leave the row unchanged
-            row.insert(0, 'NA')  # Insert 'NA' if no 'ts' found
+            row.insert(0, 'NA')  # Insert 'N/A' if no 'ts' found
+            attack_counts['NA'] += 1 
         # Convert updated_row back to a list and write to the output CSV
         writer.writerow(row)
 
