@@ -1,9 +1,8 @@
 import csv
-import re
 import sys
 from datetime import datetime
-from dateutil import parser
 import os
+import glob
 
 # Define the known attack timestamp ranges (Unix epoch time)
 known_ranges = {
@@ -19,11 +18,14 @@ known_ranges = {
     'ATTACK10': (1724325240, 1724326440),
     'ATTACK11': (1723028400, 1723032000)
 }
+attack_counts = {label: 0 for label in known_ranges.keys()}
+attack_counts['NA'] = 0  # Add 'NA' to the dictionary
+error_row_count = 0
 
 # Function to convert 'ts' string to Unix epoch time
 def datetime_string_to_epoch(dtstring):
     try:
-        dt_obj = parser.isoparse(dtstring)
+        dt_obj = datetime.strptime(dtstring, '%Y-%m-%dT%H:%M:%S.%f%z') # format  "2024-08-27T06:50:14.103264+0200"
         return int(dt_obj.timestamp())  # Convert to Unix timestamp
     except Exception as e:
         raise ValueError(f"Unrecognized datetime format: {dtstring}")
@@ -35,57 +37,84 @@ def assign_attack_label(unix_timestamp):
             return attack
     return 'NA'
 
-csv.field_size_limit(sys.maxsize)
+
 # Ensure a file path is provided via command-line argument
-if len(sys.argv) < 2:
-    print("Usage: python script.py <input_csv_file>")
-    sys.exit(1)
+# if len(sys.argv) < 2:
+#     print("Usage: python script.py <input_csv_file>")
+#     sys.exit(1)
 
 # Input file is the first argument passed to the script
-input_file = sys.argv[1]
+# input_file = sys.argv[1]
 
-output_file = sys.argv[2]  # Define the output file path
+# output_file = sys.argv[2]  # Define the output file path
 
-# Initialize a dictionary to count occurrences of each attack label
-attack_counts = {label: 0 for label in known_ranges.keys()}
-attack_counts['NA'] = 0  # Add 'NA' to the dictionary
 
-# Read and process the CSV file using csv.reader
-with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
-    reader = csv.reader(csvfile)
-    writer = csv.writer(outfile,  quotechar=' ', quoting=csv.QUOTE_ALL)
-    
-    # Adding the new column to the header
-    header = next(reader)
-    header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
-    if os.path.getsize(output_file) == 0:
-        writer.writerow(header)
+def readFile(input_file,output_file):
+    # Initialize a dictionary to count occurrences of each attack label
 
-    for row in reader:
-        row_str = ','.join(row)  # Convert list to string to search for ts
 
-        # Find the 'ts' in the row (assuming it's in the format: 'ts': '2024-08-27T01:59:44.052958+0200')
-        match = re.search(r"'ts': '(.+?)'", row_str)
+
+    # Read and process the CSV file using csv.reader
+    with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
+        #reader = csv.reader(csvfile, delimiter=';')
+        reader = csv.reader(csvfile)
+        writer = csv.writer(outfile)
         
-        if match:
-            ts_value = match.group(1)  # Extract the timestamp string
+        # Adding the new column to the header
+        header = next(reader)
+        header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
+        if os.path.getsize(output_file) == 0:
+            writer.writerow(header)
+        row_count =0
+        
+        for row in reader:
+            row_count+=1
+            
+            ts_value = row[3]  #  the timestamp string
+
             try:
                 unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
+               
+                #print (unix_timestamp)
                 attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
                 row.insert(0, attack_label)
                 attack_counts[attack_label] += 1
-                # Replace 'ts' value with the attack label in the row
-                #updated_row = re.sub(r"'ts': '(.+?)'", f"'{attack_label}'", row_str)
-            except ValueError as e:
-                print(f"Error processing row: {e}")
-                #updated_row = row_str  # If an error occurs, leave the row unchanged
-                row.insert(0, 'NA')  # Insert 'N/A' if there's an error
-                attack_counts['NA'] += 1 
-        else:
-            #updated_row = row_str  # If no 'ts' found, leave the row unchanged
-            row.insert(0, 'NA')  # Insert 'N/A' if no 'ts' found
-            attack_counts['NA'] += 1 
-        # Convert updated_row back to a list and write to the output CSV
-        writer.writerow(row)
 
-print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
+            except ValueError as e:
+
+                #print(f"Error processing row: {e} of row {row_count}")
+
+                row.insert(0, 'NA')  # Insert 'NA' if there's an error
+                attack_counts['NA'] += 1 
+            # Convert updated_row back to a list and write to the output CSV
+            writer.writerow(row)
+        
+    print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
+
+
+
+# Main function
+def main():
+    csv.field_size_limit(sys.maxsize)
+    # # Directory containing CSV files
+    if len(sys.argv) < 3:
+        print("Usage: python <directory *.csv file> <output_csv_file>")
+        sys.exit(1)
+    directory = sys.argv[1]
+    # # Get all CSV files in the directory
+    csv_files = glob.glob(os.path.join(directory, '*.csv'))
+
+    output_file = sys.argv[2]
+
+
+    for file in csv_files:
+        readFile(file,output_file)
+
+    # Output the attack counts
+    print("Attack Counts:")
+    for attack_label, count in attack_counts.items():
+        print(f"{attack_label}: {count}")
+        
+if __name__ == "__main__":
+    main()
+
