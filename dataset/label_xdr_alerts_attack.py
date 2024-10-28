@@ -1,4 +1,5 @@
 import csv
+import glob
 import re
 import sys
 from datetime import datetime
@@ -42,66 +43,80 @@ def assign_attack_label(unix_timestamp):
             return attack
     return 'NA'
 
-csv.field_size_limit(sys.maxsize)
+def labelled_csv(input_file, output_file):
+    csv.field_size_limit(sys.maxsize)
 
-# Ensure a file path is provided via command-line argument
-if len(sys.argv) < 3:
-    print("Usage: python script.py <input_csv_file> <output_csv_file>")
-    sys.exit(1)
+    # Initialize a dictionary to count occurrences of each attack label
+    attack_counts = {label: 0 for label in known_ranges.keys()}
+    attack_counts['NA'] = 0  # Add 'NA' to the dictionary
 
-# Input and output file paths from command-line arguments
-input_file = sys.argv[1]
-output_file = sys.argv[2]
+    # Read and process the CSV file using csv.reader
+    with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
+        reader = csv.reader(csvfile)
+        writer = csv.writer(outfile)
 
-# Initialize a dictionary to count occurrences of each attack label
-attack_counts = {label: 0 for label in known_ranges.keys()}
-attack_counts['NA'] = 0  # Add 'NA' to the dictionary
+        # Reading the header and inserting the 'attack_label' column
+        header = next(reader)
+        if os.path.getsize(output_file) == 0:  # Write header only if file is empty
+            header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
+            writer.writerow(header)
 
-# Read and process the CSV file using csv.reader
-with open(input_file, 'r') as csvfile, open(output_file, 'a', newline='') as outfile:
-    reader = csv.reader(csvfile)
-    writer = csv.writer(outfile, quoting=csv.QUOTE_ALL)
+        # Process each row
+        for row in reader:
+            row_str = ','.join(row)  # Convert row to string to search for timestamp fields
 
-    # Reading the header and inserting the 'attack_label' column
-    header = next(reader)
-    if os.path.getsize(output_file) == 0:  # Write header only if file is empty
-        header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
-        writer.writerow(header)
-
-    # Process each row
-    for row in reader:
-        row_str = ','.join(row)  # Convert row to string to search for timestamp fields
-
-        # Search for 'last_seen' and '_eventdate' formats in the row
-        match_last_seen = re.search(r'"last_seen":"(.+?)"', row_str)
-        match_eventdate = re.search(r'"_eventdate":"(.+?)"', row_str)
-        
-        if match_last_seen:
-            ts_value = match_last_seen.group(1)  # Extract the 'last_seen' timestamp string
-        elif match_eventdate:
-            ts_value = match_eventdate.group(1)  # Extract the '_eventdate' timestamp string
-        else:
-            ts_value = None
-
-        if ts_value:
-            try:
-                unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
-                attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
-                row.insert(0, attack_label)  # Insert the attack label at the beginning of the row
-                attack_counts[attack_label] += 1  # Increment the count for the attack label
-            except ValueError as e:
-                print(f"Error processing row: {e}")
-                row.insert(0, 'NA')  # Insert 'NA' if there's an error in processing the timestamp
+            # Search for 'last_seen' and '_eventdate' formats in the row
+            match_last_seen = re.search(r'"last_seen":"(.+?)"', row_str)
+            match_eventdate = re.search(r'"_eventdate":"(.+?)"', row_str)
+            
+            if match_last_seen:
+                ts_value = match_last_seen.group(1)  # Extract the 'last_seen' timestamp string
+            elif match_eventdate:
+                ts_value = match_eventdate.group(1)  # Extract the '_eventdate' timestamp string
+            else:
+                ts_value = None
+            if ts_value:
+                try:
+                    unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
+                    attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
+                    row.insert(0, attack_label)  # Insert the attack label at the beginning of the row
+                    attack_counts[attack_label] += 1  # Increment the count for the attack label
+                except ValueError as e:
+                    print(f"Error processing row: {e}")
+                    row.insert(0, 'NA')  # Insert 'NA' if there's an error in processing the timestamp
+                    attack_counts['NA'] += 1  # Increment 'NA' count
+            else:
+                row.insert(0, 'NA')  # Insert 'NA' if no timestamp field is found
                 attack_counts['NA'] += 1  # Increment 'NA' count
-        else:
-            row.insert(0, 'NA')  # Insert 'NA' if no timestamp field is found
-            attack_counts['NA'] += 1  # Increment 'NA' count
 
-        # Write the modified row to the output file
-        writer.writerow(row)
-        
-print("\nAttack label counts:")
-for label, count in attack_counts.items():
-    print(f"{label}: {count}")
+            # Write the modified row to the output file
+            writer.writerow(row)
+            
+    print("\nAttack label counts:")
+    for label, count in attack_counts.items():
+        print(f"{label}: {count}")
 
-print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
+    print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
+
+def main():
+    #output several file
+    if len(sys.argv) < 2:
+        print("Usage: python <directory> ")
+        sys.exit(1)
+    directory = sys.argv[1]
+    # # Get all CSV files in the directory
+    csv_files = glob.glob(os.path.join(directory, '*.csv'))
+    
+    #output several file
+    for file in csv_files:
+        output_file= file.split('xdr_alerts_attack_chunks/chunk')[0] + 'labelled_attack/labelled_xdr_alerts_attack/chunk' +  file.split('xdr_alerts_attack_chunks/chunk')[1]
+        labelled_csv(file,output_file)
+    #output 1 file
+    #output_file = sys.argv[2]
+    # for file in csv_files:
+    #     labelled_csv(file,output_file)
+
+
+
+if __name__ == "__main__":
+    main()

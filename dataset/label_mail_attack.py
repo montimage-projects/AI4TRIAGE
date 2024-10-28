@@ -96,19 +96,24 @@ def readFile(input_file,output_file):
 # Main function
 def main():
     csv.field_size_limit(sys.maxsize)
-    # # Directory containing CSV files
+    # Directory containing CSV files
     if len(sys.argv) < 3:
         print("Usage: python <directory *.csv file> <output_csv_file>")
         sys.exit(1)
     directory = sys.argv[1]
-    # # Get all CSV files in the directory
+    # Get all CSV files in the directory
     csv_files = glob.glob(os.path.join(directory, '*.csv'))
 
+    # output 1 file
     output_file = sys.argv[2]
-
-
     for file in csv_files:
         readFile(file,output_file)
+
+    #Output several file
+    # for file in csv_files:
+    #     output_file= file.split('mail_attack_chunks/chunk')[0] + 'labelled_attack/labelled_mail_attack/chunk' +  file.split('mail_attack_chunks/chunk')[1]
+    #     readFile(file,output_file)
+
 
     # Output the attack counts
     print("Attack Counts:")

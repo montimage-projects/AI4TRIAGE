@@ -1,4 +1,5 @@
 import csv
+import glob
 import re
 import sys
 from datetime import datetime
@@ -34,42 +35,29 @@ def assign_attack_label(unix_timestamp):
     return 'NA'
 
 
-csv.field_size_limit(sys.maxsize)
-# Ensure a file path is provided via command-line argument
-if len(sys.argv) < 2:
-    print("Usage: python script.py <input_csv_file>")
-    sys.exit(1)
-
-# Input file is the first argument passed to the script
-input_file = sys.argv[1]
-
-output_file = sys.argv[2]  # Define the output file path
-
-# Initialize a dictionary to count occurrences of each attack label
-attack_counts = {label: 0 for label in known_ranges.keys()}
-attack_counts['NA'] = 0  # Add 'NA' to the dictionary
-
-
-# Read and process the CSV file using csv.reader
-with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
-    reader = csv.reader(csvfile)
-    writer = csv.writer(outfile, quotechar=' ', quoting=csv.QUOTE_ALL)
-    
-    # Adding the new column to the header
-    header = next(reader)
-    header.insert(0,'attack_label')  # Insert 'attack_label' at the beginning
-
-    if os.path.getsize(output_file) == 0:
-        writer.writerow(header)
-
-    for row in reader:
-        row_str = ','.join(row)  # Convert list to string to search for src_time
-
-        # Find the 'src_time' in the row (assuming it's in the format: src_time': 'Thu Jun 27 03:11:00 2024')
-        match = re.search(r"src_time': '(.+?)'", row_str)
+def labelled_csv(input_file, output_file):
+    csv.field_size_limit(sys.maxsize)
+    attack_counts = {label: 0 for label in known_ranges.keys()}
+    attack_counts['NA'] = 0  # Add 'NA' to the dictionary
+    with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
+        reader = csv.reader(csvfile)
+        writer = csv.writer(outfile)
         
-        if match:
-            ts_value = match.group(1)  # Extract the timestamp string
+        # Adding the new column to the header
+        header = next(reader)
+        header.insert(0,'attack_label')  # Insert 'attack_label' at the beginning
+
+        if os.path.getsize(output_file) == 0:
+            writer.writerow(header)
+        row_count =0
+        for row in reader:
+            # row_str = ','.join(row)  # Convert list to string to search for src_time
+
+            # # Find the 'src_time' in the row (assuming it's in the format: src_time': 'Thu Jun 27 03:11:00 2024')
+            # match = re.search(r"src_time': '(.+?)'", row_str)
+            row_count+=1
+            ts_value = row[155]
+        
             try:
                 unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
                 attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
@@ -82,13 +70,34 @@ with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
                 #updated_row = row_str  # If an error occurs, leave the row unchanged
                 row.insert(0, 'NA')
                 attack_counts['NA'] += 1  # Increment 'NA' count
-        else:
-            #updated_row = row_str  # If no 'src_time' found, leave the row unchanged
-            row.insert(0, 'NA')
-            attack_counts['NA'] += 1  # Increment 'NA' count
-        
-        # Convert updated_row back to a list and write to the output CSV
-        #writer.writerow(updated_row.split(','))
-        writer.writerow(row)
 
-print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
+            
+            # Convert updated_row back to a list and write to the output CSV
+            #writer.writerow(updated_row.split(','))
+            writer.writerow(row)
+    print("Attack Counts:")
+    for attack_label, count in attack_counts.items():
+        print(f"{attack_label}: {count}")
+    print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
+
+
+def main():
+    # Ensure a file path is provided via command-line argument
+    if len(sys.argv) < 2:
+        print("Usage: python <directory> ")
+        sys.exit(1)
+    directory = sys.argv[1]
+    # # Get all CSV files in the directory
+    csv_files = glob.glob(os.path.join(directory, '*.csv'))
+    output_file = sys.argv[2]  # Define the output file path
+
+
+    for file in csv_files:
+        #output_file= file.split('proxy_attack_chunks/chunk')[0] + 'labelled_attack/labelled_proxy_attack/chunk' +  file.split('proxy_attack_chunks/chunk')[1]
+        labelled_csv(file,output_file)
+    #print(error_row_count)
+
+
+
+if __name__ == "__main__":
+    main()
