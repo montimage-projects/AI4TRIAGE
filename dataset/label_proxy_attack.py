@@ -51,10 +51,6 @@ def labelled_csv(input_file, output_file):
             writer.writerow(header)
         row_count =0
         for row in reader:
-            # row_str = ','.join(row)  # Convert list to string to search for src_time
-
-            # # Find the 'src_time' in the row (assuming it's in the format: src_time': 'Thu Jun 27 03:11:00 2024')
-            # match = re.search(r"src_time': '(.+?)'", row_str)
             row_count+=1
             ts_value = row[155]
         
@@ -63,17 +59,10 @@ def labelled_csv(input_file, output_file):
                 attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
                 row.insert(0, attack_label)
                 attack_counts[attack_label] += 1  # Increment the count for the attack label
-                # Replace 'src_time' value with the attack label in the row
-                #updated_row = re.sub(r"src_time': '(.+?)'", f"'{attack_label}'", row_str)
             except ValueError as e:
                 print(f"Error processing row: {e}")
-                #updated_row = row_str  # If an error occurs, leave the row unchanged
                 row.insert(0, 'NA')
                 attack_counts['NA'] += 1  # Increment 'NA' count
-
-            
-            # Convert updated_row back to a list and write to the output CSV
-            #writer.writerow(updated_row.split(','))
             writer.writerow(row)
     print("Attack Counts:")
     for attack_label, count in attack_counts.items():
@@ -95,9 +84,6 @@ def main():
     for file in csv_files:
         #output_file= file.split('proxy_attack_chunks/chunk')[0] + 'labelled_attack/labelled_proxy_attack/chunk' +  file.split('proxy_attack_chunks/chunk')[1]
         labelled_csv(file,output_file)
-    #print(error_row_count)
-
-
 
 if __name__ == "__main__":
     main()

@@ -38,22 +38,7 @@ def assign_attack_label(unix_timestamp):
     return 'NA'
 
 
-# Ensure a file path is provided via command-line argument
-# if len(sys.argv) < 2:
-#     print("Usage: python script.py <input_csv_file>")
-#     sys.exit(1)
-
-# Input file is the first argument passed to the script
-# input_file = sys.argv[1]
-
-# output_file = sys.argv[2]  # Define the output file path
-
-
 def readFile(input_file,output_file):
-    # Initialize a dictionary to count occurrences of each attack label
-
-
-
     # Read and process the CSV file using csv.reader
     with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
         #reader = csv.reader(csvfile, delimiter=';')
