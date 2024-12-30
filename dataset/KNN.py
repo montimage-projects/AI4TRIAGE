@@ -11,15 +11,15 @@ from sklearn.neighbors import KNeighborsClassifier
 
 def preprocess_data(data):
     # Handle missing values
-    data['eventdate'] = data['eventdate'].fillna('BENIGN')  # Fill label column
+    data['attack_label'] = data['attack_label'].fillna('BENIGN')  # Fill label column
     data = data.fillna(data.median(numeric_only=True))  # Fill numeric columns with median
 
     # Convert categorical features to numerical using one-hot encoding
     data = pd.get_dummies(data, drop_first=True)
 
     # Separate features and labels
-    X = data.drop(columns=['eventdate'], errors='ignore').values
-    y = data['eventdate'].values
+    X = data.drop(columns=['attack_label'], errors='ignore').values
+    y = data['attack_label'].values
 
     return X, y
 # Feature Importance using Random Forest

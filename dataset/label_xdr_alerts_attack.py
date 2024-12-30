@@ -75,6 +75,8 @@ def labelled_csv(input_file, output_file):
                 ts_value = match_eventdate.group(1)  # Extract the '_eventdate' timestamp string
             else:
                 ts_value = None
+            if match_last_seen or match_eventdate:
+                del row[row.index(ts_value)]
             if ts_value:
                 try:
                     unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp

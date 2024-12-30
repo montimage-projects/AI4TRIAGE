@@ -1,10 +1,7 @@
 import csv
 import sys
 import numpy as np
-from sklearn.calibration import LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 
 # Function to convert a string to a float, handling errors
@@ -57,10 +54,11 @@ def main():
         sys.exit(1)
     
     labeled_file=(sys.argv[1])   
-    
+    output_file = (sys.argv[2])
  
     data, max_columns = load_and_pad_labeled_data(labeled_file)
     data = pd.DataFrame(data)
+    # Assume the first column contains the labels
     eventdate_column = data.iloc[:, 0]
     data_without_first_column = data.iloc[:, 1:] 
     # Calculate the missing value ratio for columns excluding the first
@@ -72,7 +70,7 @@ def main():
 
     # Drop these columns
     data_cleaned = data.drop(columns=columns_to_drop)
-    data_cleaned.insert(0, 'eventdate', eventdate_column)
+    data_cleaned.insert(0, 'attack_label', eventdate_column)
 
     # Identify numeric and categorical columns in the remaining columns
     numeric_columns = data_cleaned.select_dtypes(include=['number']).columns  # Find numeric columns
@@ -95,9 +93,9 @@ def main():
     # data['eventdate'] = label_encoder.fit_transform(data['eventdate'].astype(str))  # Apply label encoding to categorical columns
 
     # Save the processed DataFrame to a CSV file
-    output_file = sys.argv[2]
-    data_cleaned.to_csv(output_file, index=False) 
 
+    data_cleaned.to_csv(output_file, index=False)
+    print(f"Processed data saved to {output_file}!")
 if __name__ == "__main__":
     main()    
 

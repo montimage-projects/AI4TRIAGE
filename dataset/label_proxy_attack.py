@@ -45,14 +45,15 @@ def labelled_csv(input_file, output_file):
         
         # Adding the new column to the header
         header = next(reader)
+        timestamp_col = 155
         header.insert(0,'attack_label')  # Insert 'attack_label' at the beginning
-
+        del header[timestamp_col + 1]
         if os.path.getsize(output_file) == 0:
             writer.writerow(header)
         row_count =0
         for row in reader:
             row_count+=1
-            ts_value = row[155]
+            ts_value = row[timestamp_col]
         
             try:
                 unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
@@ -63,6 +64,7 @@ def labelled_csv(input_file, output_file):
                 print(f"Error processing row: {e}")
                 row.insert(0, 'NA')
                 attack_counts['NA'] += 1  # Increment 'NA' count
+                del row[timestamp_col + 1]
             writer.writerow(row)
     print("Attack Counts:")
     for attack_label, count in attack_counts.items():

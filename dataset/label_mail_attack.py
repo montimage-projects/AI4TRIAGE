@@ -47,7 +47,9 @@ def readFile(input_file,output_file):
         
         # Adding the new column to the header
         header = next(reader)
+        timestamp_col = 3
         header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
+        del header[timestamp_col + 1]
         if os.path.getsize(output_file) == 0:
             writer.writerow(header)
         row_count =0
@@ -55,7 +57,7 @@ def readFile(input_file,output_file):
         for row in reader:
             row_count+=1
             
-            ts_value = row[3]  #  the timestamp string
+            ts_value = row[timestamp_col]  #  the timestamp string
 
             try:
                 unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
@@ -72,6 +74,7 @@ def readFile(input_file,output_file):
                 row.insert(0, 'NA')  # Insert 'NA' if there's an error
                 attack_counts['NA'] += 1 
             # Convert updated_row back to a list and write to the output CSV
+            del row[timestamp_col + 1]
             writer.writerow(row)
         
     print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
