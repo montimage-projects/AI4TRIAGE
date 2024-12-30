@@ -41,14 +41,14 @@ def assign_attack_label(unix_timestamp):
     for attack, (start, end) in known_ranges.items():
         if start <= unix_timestamp <= end:
             return attack
-    return 'NA'
+    return 'BENIGN'
 
 def labelled_csv(input_file, output_file):
     csv.field_size_limit(sys.maxsize)
 
     # Initialize a dictionary to count occurrences of each attack label
     attack_counts = {label: 0 for label in known_ranges.keys()}
-    attack_counts['NA'] = 0  # Add 'NA' to the dictionary
+    attack_counts['BENIGN'] = 0  # Add 'BENIGN' to the dictionary
 
     # Read and process the CSV file using csv.reader
     with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
@@ -57,8 +57,16 @@ def labelled_csv(input_file, output_file):
 
         # Reading the header and inserting the 'attack_label' column
         header = next(reader)
+
+         # Identify indices of the columns to remove
+        columns_to_remove = [header.index(col) for col in ['last_seen', '_eventdate'] if col in header]
+
+        # Remove the unwanted columns from the header
+        header = [col for idx, col in enumerate(header) if idx not in columns_to_remove]
+        header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
+
+
         if os.path.getsize(output_file) == 0:  # Write header only if file is empty
-            header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
             writer.writerow(header)
 
         # Process each row
@@ -75,8 +83,6 @@ def labelled_csv(input_file, output_file):
                 ts_value = match_eventdate.group(1)  # Extract the '_eventdate' timestamp string
             else:
                 ts_value = None
-            if match_last_seen or match_eventdate:
-                del row[row.index(ts_value)]
             if ts_value:
                 try:
                     unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
@@ -85,11 +91,14 @@ def labelled_csv(input_file, output_file):
                     attack_counts[attack_label] += 1  # Increment the count for the attack label
                 except ValueError as e:
                     print(f"Error processing row: {e}")
-                    row.insert(0, 'NA')  # Insert 'NA' if there's an error in processing the timestamp
-                    attack_counts['NA'] += 1  # Increment 'NA' count
+                    row.insert(0, 'BENIGN')  # Insert 'BENIGN' if there's an error in processing the timestamp
+                    attack_counts['BENIGN'] += 1  # Increment 'BENIGN' count
             else:
-                row.insert(0, 'NA')  # Insert 'NA' if no timestamp field is found
-                attack_counts['NA'] += 1  # Increment 'NA' count
+                row.insert(0, 'BENIGN')  # Insert 'BENIGN' if no timestamp field is found
+                attack_counts['BENIGN'] += 1  # Increment 'BENIGN' count
+
+            # Remove the unwanted columns from the row
+            row = [value for idx, value in enumerate(row) if idx not in columns_to_remove]
 
             # Write the modified row to the output file
             writer.writerow(row)
@@ -102,21 +111,21 @@ def labelled_csv(input_file, output_file):
 
 def main():
     #output several file
-    if len(sys.argv) < 2:
-        print("Usage: python <directory> ")
+    if len(sys.argv) < 3:
+        print("Usage: python <directory> <out_put>")
         sys.exit(1)
     directory = sys.argv[1]
     # # Get all CSV files in the directory
     csv_files = glob.glob(os.path.join(directory, '*.csv'))
     
     #output several file
-    for file in csv_files:
-        output_file= file.split('xdr_alerts_attack_chunks/chunk')[0] + 'labelled_attack/labelled_xdr_alerts_attack/chunk' +  file.split('xdr_alerts_attack_chunks/chunk')[1]
-        labelled_csv(file,output_file)
-    #output 1 file
-    #output_file = sys.argv[2]
     # for file in csv_files:
+    #     output_file= file.split('xdr_alerts_attack_chunks/chunk')[0] + 'labelled_attack/labelled_xdr_alerts_attack/chunk' +  file.split('xdr_alerts_attack_chunks/chunk')[1]
     #     labelled_csv(file,output_file)
+    #output 1 file
+    output_file = sys.argv[2]
+    for file in csv_files:
+        labelled_csv(file,output_file)
 
 
 

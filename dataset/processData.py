@@ -83,7 +83,7 @@ def main():
     # Fill missing values in categorical columns with mode
     for col in categorical_columns:
         mode_value = data_cleaned[col].mode()[0]  # Calculate mode
-        data_cleaned[col].fillna(mode_value, inplace=True)  # Fill with mode
+        data_cleaned[col] = data_cleaned[col].fillna(mode_value) # Fill with mode
         
     # Apply label encoding
     label_encoder = LabelEncoder()  # Create LabelEncoder instance

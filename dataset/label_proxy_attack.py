@@ -64,7 +64,7 @@ def labelled_csv(input_file, output_file):
                 print(f"Error processing row: {e}")
                 row.insert(0, 'NA')
                 attack_counts['NA'] += 1  # Increment 'NA' count
-                del row[timestamp_col + 1]
+            del row[timestamp_col + 1]
             writer.writerow(row)
     print("Attack Counts:")
     for attack_label, count in attack_counts.items():
@@ -74,7 +74,7 @@ def labelled_csv(input_file, output_file):
 
 def main():
     # Ensure a file path is provided via command-line argument
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("Usage: python <directory> ")
         sys.exit(1)
     directory = sys.argv[1]
