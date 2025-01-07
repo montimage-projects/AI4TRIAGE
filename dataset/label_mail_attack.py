@@ -19,7 +19,7 @@ known_ranges = {
     'ATTACK11': (1723028400, 1723032000)
 }
 attack_counts = {label: 0 for label in known_ranges.keys()}
-attack_counts['NA'] = 0  # Add 'NA' to the dictionary
+attack_counts['BENIGN'] = 0  # Add 'BENIGN' to the dictionary
 error_row_count = 0
 
 # Function to convert 'ts' string to Unix epoch time
@@ -35,7 +35,7 @@ def assign_attack_label(unix_timestamp):
     for attack, (start, end) in known_ranges.items():
         if start <= unix_timestamp <= end:
             return attack
-    return 'NA'
+    return 'BENIGN'
 
 
 def readFile(input_file,output_file):
@@ -52,27 +52,20 @@ def readFile(input_file,output_file):
         del header[timestamp_col + 1]
         if os.path.getsize(output_file) == 0:
             writer.writerow(header)
-        row_count =0
-        
-        for row in reader:
-            row_count+=1
-            
-            ts_value = row[timestamp_col]  #  the timestamp string
 
+        for row in reader:
+            ts_value = row[timestamp_col]  #  the timestamp string
             try:
                 unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
-               
+                
                 #print (unix_timestamp)
                 attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
                 row.insert(0, attack_label)
                 attack_counts[attack_label] += 1
 
             except ValueError as e:
-
-                #print(f"Error processing row: {e} of row {row_count}")
-
-                row.insert(0, 'NA')  # Insert 'NA' if there's an error
-                attack_counts['NA'] += 1 
+                row.insert(0, 'BENIGN')  # Insert 'BENIGN' if there's an error
+                attack_counts['BENIGN'] += 1 
             # Convert updated_row back to a list and write to the output CSV
             del row[timestamp_col + 1]
             writer.writerow(row)

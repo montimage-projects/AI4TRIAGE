@@ -87,19 +87,20 @@ def labelled_csv(input_file, output_file):
                 try:
                     unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
                     attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
-                    row.insert(0, attack_label)  # Insert the attack label at the beginning of the row
                     attack_counts[attack_label] += 1  # Increment the count for the attack label
                 except ValueError as e:
                     print(f"Error processing row: {e}")
-                    row.insert(0, 'BENIGN')  # Insert 'BENIGN' if there's an error in processing the timestamp
+                    attack_label = 'BENIGN'
                     attack_counts['BENIGN'] += 1  # Increment 'BENIGN' count
             else:
-                row.insert(0, 'BENIGN')  # Insert 'BENIGN' if no timestamp field is found
+                attack_label = 'BENIGN'
                 attack_counts['BENIGN'] += 1  # Increment 'BENIGN' count
 
-            # Remove the unwanted columns from the row
+            # Remove the unwanted columns from the row BEFORE adding the label
             row = [value for idx, value in enumerate(row) if idx not in columns_to_remove]
 
+            # Insert the attack label at the beginning of the row
+            row.insert(0, attack_label)
             # Write the modified row to the output file
             writer.writerow(row)
             

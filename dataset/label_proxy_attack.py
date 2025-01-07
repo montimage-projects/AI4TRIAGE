@@ -32,13 +32,13 @@ def assign_attack_label(unix_timestamp):
     for attack, (start, end) in known_ranges.items():
         if start <= unix_timestamp <= end:
             return attack
-    return 'NA'
+    return 'BENIGN'
 
 
 def labelled_csv(input_file, output_file):
     csv.field_size_limit(sys.maxsize)
     attack_counts = {label: 0 for label in known_ranges.keys()}
-    attack_counts['NA'] = 0  # Add 'NA' to the dictionary
+    attack_counts['BENIGN'] = 0  # Add 'BENIGN' to the dictionary
     with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
         reader = csv.reader(csvfile)
         writer = csv.writer(outfile)
@@ -62,8 +62,8 @@ def labelled_csv(input_file, output_file):
                 attack_counts[attack_label] += 1  # Increment the count for the attack label
             except ValueError as e:
                 print(f"Error processing row: {e}")
-                row.insert(0, 'NA')
-                attack_counts['NA'] += 1  # Increment 'NA' count
+                row.insert(0, 'BENIGN')
+                attack_counts['BENIGN'] += 1  # Increment 'BENIGN' count
             del row[timestamp_col + 1]
             writer.writerow(row)
     print("Attack Counts:")
@@ -75,7 +75,7 @@ def labelled_csv(input_file, output_file):
 def main():
     # Ensure a file path is provided via command-line argument
     if len(sys.argv) < 3:
-        print("Usage: python <directory> ")
+        print("Usage: python <directory> <out_put> ")
         sys.exit(1)
     directory = sys.argv[1]
     # # Get all CSV files in the directory
