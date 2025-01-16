@@ -10,9 +10,9 @@ import json
 BROKER = "localhost"
 LOGS_TOPIC = "ai4triage/logs"
 RESULTS_TOPIC = "ai4triage/results"
-MODEL_PATH = '/Users/haobui/Montimge/AI4CYBER/app/models/knn_model.joblib'
-SCALER_PATH = '/Users/haobui/Montimge/AI4CYBER/app/models/scaler.pkl'
-FEATURES_FILE= '/Users/haobui/Montimge/AI4CYBER/top_features.csv'
+MODEL_PATH = '/app/models/knn_model.joblib'
+SCALER_PATH = '/app/models/scaler.pkl'
+FEATURES_FILE= '/top_features.csv'
 
 # Load pre-trained model and scaler
 model = joblib.load(MODEL_PATH)

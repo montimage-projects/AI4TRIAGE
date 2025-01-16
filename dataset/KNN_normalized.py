@@ -67,7 +67,7 @@ def evaluate_model(model, X_test, y_test):
     print("Accuracy:", accuracy_score(y_test, y_pred))
     print("Classification Report:\n", classification_report(y_test, y_pred))
 
-def save_model_and_scaler(model, scaler, model_path="Models/knn_model.joblib", scaler_path="Models/scaler.pkl"):
+def save_model_and_scaler(model, scaler, model_path="/app/models/knn_model.joblib", scaler_path="/app/models/scaler.pkl"):
     """
     Save the trained model and scaler for later use.
     """
@@ -80,7 +80,7 @@ def save_model_and_scaler(model, scaler, model_path="Models/knn_model.joblib", s
 if __name__ == "__main__":
     # Step 1: Merge CSV files
     if len(sys.argv) < 3:
-        print("Usage: python KNN1.py <directory *.csv file> <output_csv_file>")
+        print("Usage: python KNN_normalized.py <directory *.csv file> <output_csv_file>")
         sys.exit(1)
     input_folder = sys.argv[1]
     output_file =sys.argv[2]

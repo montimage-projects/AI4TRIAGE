@@ -6,7 +6,7 @@ import json
 # MQTT Configuration
 BROKER = "localhost"
 TOPIC = "ai4triage/logs"
-FEATURES_FILE = '/Users/haobui/Montimge/AI4CYBER/top_features.csv'
+FEATURES_FILE = '/top_features.csv'
 
 def select_features(features_file):
     try:
@@ -50,6 +50,6 @@ def send_to_mqtt(data):
 if __name__ == '__main__':
     # Test with a sample file
     
-    file_path = "/Users/haobui/Montimge/AI4CYBER/Datasets/processed/processed_firewall.csv"  # Replace with actual log file path
+    file_path = "sample_log.csv"  # Replace with actual log file path
     log_data = process_log(file_path)
     send_to_mqtt(log_data)
