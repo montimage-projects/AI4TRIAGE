@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  ai4triage-backend:
+    build: ./app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app/uploads:/app/uploads
+    depends_on:
+      - mqtt-broker
+
+  data-adapter:
+    build: ./data-adapter
+    depends_on:
+      - mqtt-broker
+
+  mqtt-broker:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+
+  gui:
+    image: nodered/node-red
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./gui:/data

@@ -1,0 +1,62 @@
+[
+    {
+        "id": "1",
+        "type": "mqtt in",
+        "z": "flow1",
+        "name": "Receive Logs",
+        "topic": "network/logs",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "mqtt_broker_id",
+        "x": 200,
+        "y": 100,
+        "wires": [["2"]]
+    },
+    {
+        "id": "2",
+        "type": "function",
+        "z": "flow1",
+        "name": "Preprocess Data",
+        "func": "// Parse and preprocess log data\nlet logs = msg.payload;\n// Example: normalize or handle missing values\nmsg.payload = preprocessLogs(logs);\nreturn msg;",
+        "outputs": 1,
+        "x": 400,
+        "y": 100,
+        "wires": [["3"]]
+    },
+    {
+        "id": "3",
+        "type": "function",
+        "z": "flow1",
+        "name": "Attack Detection",
+        "func": "// Use your ML model for prediction\nconst result = runModel(msg.payload);\nmsg.payload = result;\nreturn msg;",
+        "outputs": 1,
+        "x": 600,
+        "y": 100,
+        "wires": [["4", "5"]]
+    },
+    {
+        "id": "4",
+        "type": "mqtt out",
+        "z": "flow1",
+        "name": "Publish Detection",
+        "topic": "network/detections",
+        "qos": "2",
+        "retain": "false",
+        "broker": "mqtt_broker_id",
+        "x": 800,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "5",
+        "type": "mongodb out",
+        "z": "flow1",
+        "name": "Save Results",
+        "collection": "detection_results",
+        "database": "network_logs",
+        "server": "mongodb_server_id",
+        "x": 800,
+        "y": 120,
+        "wires": []
+    }
+]
