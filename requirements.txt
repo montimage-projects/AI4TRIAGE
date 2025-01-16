@@ -1,6 +1,6 @@
 flask>=2.2.5
 pymongo>=4.6.3
 scikit-learn>=1.5.0
-numpy==1.24.2
-pandas==1.5.3
-paho-mqtt==1.6.1
+numpy
+pandas
+paho-mqtt
