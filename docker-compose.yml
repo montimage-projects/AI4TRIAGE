@@ -1,29 +1,42 @@
-version: '3.8'
-
 services:
   ai4triage-backend:
     build: ./app
     ports:
-      - "5000:5000"
+      - "5000:5000"  # Exposing the backend on port 5000
     volumes:
       - ./app/uploads:/app/uploads
     depends_on:
       - mqtt-broker
+    networks:
+      - ai4triage-network
 
   data-adapter:
     build: ./data-adapter
     depends_on:
       - mqtt-broker
+    networks:
+      - ai4triage-network
 
   mqtt-broker:
     image: eclipse-mosquitto
     ports:
-      - "1883:1883"
-      - "9001:9001"
+      - "1883:1883"  # MQTT broker port
+      - "9001:9001"  # WebSocket port (if needed)
+    networks:
+      - ai4triage-network
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf  # Optional: Custom Mosquitto config
 
   gui:
     image: nodered/node-red
     ports:
-      - "1880:1880"
+      - "1880:1880"  # Node-RED UI
     volumes:
       - ./gui:/data
+      - ./gui/flows.json:/data/flows.json  # Mount flows.json explicitly
+    networks:
+      - ai4triage-network
+
+networks:
+  ai4triage-network:
+    driver: bridge
