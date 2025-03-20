@@ -44,10 +44,10 @@ python dataset/label_xdr_alerts_attack.py Datasets/raw/xdr_alerts_attack_chunks/
 ### Step 3: Process the Data
 After labeling, process the data using:
 ```bash
-python dataset/processFile.py Datasets/labelled/firewall_labelled.csv Datasets/processed/firewall_processed.csv
-python dataset/processFile.py Datasets/labelled/mail_labelled.csv Datasets/processed/mail_processed.csv
-python dataset/processFile.py Datasets/labelled/proxy_labelled.csv Datasets/processed/proxy_processed.csv
-python dataset/processFile.py Datasets/labelled/xdr_labelled.csv Datasets/processed/xdr_processed.csv
+python dataset/processData.py Datasets/labelled/firewall_labelled.csv Datasets/processed/firewall_processed.csv
+python dataset/processData.py Datasets/labelled/mail_labelled.csv Datasets/processed/mail_processed.csv
+python dataset/processData.py Datasets/labelled/proxy_labelled.csv Datasets/processed/proxy_processed.csv
+python dataset/processData.py Datasets/labelled/xdr_labelled.csv Datasets/processed/xdr_processed.csv
 ```
 This step cleans and prepares the dataset for model training.
 
