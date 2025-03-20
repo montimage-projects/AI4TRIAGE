@@ -1,121 +1,69 @@
-from datetime import datetime
-import csv
+import glob
+import os
 import sys
-from dateutil import parser
+import pandas as pd
 
 
-def datetime_string_to_epoch(dtstring): 
-    # Input datetime string
-    # Convert the datetime string to a datetime object
-    try: 
-        dt_obj = parser.parse(dtstring)
-        # Convert the datetime object to an epoch timestamp
-        epoch_time = dt_obj.timestamp()
-        return epoch_time
-    except:
-        return "NULL"
+
+# Define the known attack timestamp ranges (Unix epoch time)
+known_ranges = {
+    'ATTACK1': (1724921820, 1724922300),
+    'ATTACK2': (1724848560, 1724849760),
+    'ATTACK3': (1724846100, 1724847240),
+    'ATTACK4': (1724769420, 1724770080),
+    'ATTACK5': (1724767920, 1724768940),
+    'ATTACK6': (1724420820, 1724421660),
+    'ATTACK7': (1724411220, 1724411700),
+    'ATTACK8': (1724410200, 1724410620),
+    'ATTACK9': (1724334120, 1724334600),
+    'ATTACK10': (1724325240, 1724326440),
+    'ATTACK11': (1723028400, 1723032000)
+}
+attack_counts = {label: 0 for label in known_ranges.keys()}
+attack_counts['BENIGN'] = 0  # Add 'BENIGN' to the dictionary
+error_row_count = 0
+
+# Function to assign attack labels based on Unix timestamp ranges
+def assign_attack_label(row):
+    for attack, (start_time, end_time) in known_ranges.items():
+        if start_time <= row['timestamp'] <= end_time:
+            return attack
+    return 'BENIGN'
 
 
-#Test datetime_string_to_epoch
-#dtstring = "2024-08-29 00:10:19"    
-#print('Epoch time for ' + str(dtstring) + ' is: ' + str(datetime_string_to_epoch(dtstring)))
+def readFile(input_file,output_file):
+    time_format = '%Y-%m-%d %H:%M:%S.%f'
+    df = pd.read_csv(input_file)
 
-def convert_epoch_to_attack_label(ts):
-    if (ts >= 1724921820) and (ts <= 1724922300): 
-        return 'ATTACK1'
-    elif  (ts >= 1724848560) and (ts <= 1724849760): 
-        return 'ATTACK2'
-    elif  (ts >= 1724846100) and (ts <= 1724847240): 
-        return 'ATTACK3'
-    elif  (ts >= 1724769420) and (ts <= 1724770080): 
-        return 'ATTACK4'
-    elif  (ts >= 1724767920) and (ts <= 1724768940): 
-        return 'ATTACK5'
-    elif  (ts >= 1724420820) and (ts <= 1724421660): 
-        return 'ATTACK6'
-    elif  (ts >= 1724411220) and (ts <= 1724411700): 
-        return 'ATTACK7'
-    elif  (ts >= 1724410200) and (ts <= 1724410620): 
-        return 'ATTACK8'
-    elif  (ts >= 1724334120) and (ts <= 1724334600): 
-        return 'ATTACK9'
-    elif  (ts >= 1724325240) and (ts <= 1724326440): 
-        return 'ATTACK10'
-    elif  (ts >= 1723028400) and (ts <= 1723032000): 
-        return 'ATTACK11'
-    else: 
-        return 'NA'  
-def convert_dtstring_to_attack_label(dtstring): 
-    ts = datetime_string_to_epoch(dtstring)
-    if (ts >= 1724921820) and (ts <= 1724922300): 
-        return 'ATTACK1'
-    elif  (ts >= 1724848560) and (ts <= 1724849760): 
-        return 'ATTACK2'
-    elif  (ts >= 1724846100) and (ts <= 1724847240): 
-        return 'ATTACK3'
-    elif  (ts >= 1724769420) and (ts <= 1724770080): 
-        return 'ATTACK4'
-    elif  (ts >= 1724767920) and (ts <= 1724768940): 
-        return 'ATTACK5'
-    elif  (ts >= 1724420820) and (ts <= 1724421660): 
-        return 'ATTACK6'
-    elif  (ts >= 1724411220) and (ts <= 1724411700): 
-        return 'ATTACK7'
-    elif  (ts >= 1724410200) and (ts <= 1724410620): 
-        return 'ATTACK8'
-    elif  (ts >= 1724334120) and (ts <= 1724334600): 
-        return 'ATTACK9'
-    elif  (ts >= 1724325240) and (ts <= 1724326440): 
-        return 'ATTACK10'
-    elif  (ts >= 1723028400) and (ts <= 1723032000): 
-        return 'ATTACK11'
-    else: 
-        return 'NA'  
+    df['eventdate'] = pd.to_datetime(df['eventdate'], format=time_format)
+
+    df['timestamp'] = df['eventdate'].apply(lambda x: x.timestamp()) 
+    df.pop('eventdate')
+    df['attack_label'] = df.apply(assign_attack_label, axis=1)
+    df.insert(0, 'attack_label', df.pop('attack_label'))
+
+    df.insert(1, 'timestamp', df.pop('timestamp'))
+
     
-csv.field_size_limit(sys.maxsize)
-
-file_in = open(str(sys.argv[1]),'rt')
-reader = csv.reader(file_in)
-
-file_out = open(str(sys.argv[2]),'at')
-writer = csv.writer(file_out, delimiter=',', quotechar=' ', quoting=csv.QUOTE_ALL)
-
-line_nb = 0
-attacks = []
-print('Start labelling the csv file: ' + str(sys.argv[1]))
-for line in reader: 
-    if line_nb == 0:
-        #print(line)
-        if len(file_out) == 0: 
-            writer.writerow(line)
-            line_nb += 1
-            continue
-        else: 
-            line_nb += 1
-            continue
-    else: 
-        #print(line)
-        new_line = []
-        for i in range(len(line)): 
-            if i == 0: 
-                #print(line[i])
-                label = convert_dtstring_to_attack_label(str(line[i]))
-                new_line.append(label)
-                #print(label)
-                if label not in attacks: 
-                    attacks.append(label)
-            else: 
-                new_line.append(line[i])
-        #print(new_line)
-        writer.writerow(new_line)
-        line_nb += 1
-print('Finish labelling the csv file. Outfile is: ' + str(sys.argv[2]))
-print(attacks)
+    df.to_csv(output_file, index=False)
         
-    
+    print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
 
 
 
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: python <directory *.csv file> <output_csv_file>")
+        sys.exit(1)
+    directory = sys.argv[1]
+    # Get all CSV files in the directory
+    csv_files = glob.glob(os.path.join(directory, '*.csv'))
+
+    # output 1 file
+    output_file = sys.argv[2]
+    for file in csv_files:
+        readFile(file, output_file)
 
 
-
+if __name__ == "__main__":
+    main()

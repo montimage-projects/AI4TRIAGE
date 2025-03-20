@@ -46,64 +46,53 @@ def assign_attack_label(unix_timestamp):
 def labelled_csv(input_file, output_file):
     csv.field_size_limit(sys.maxsize)
 
-    # Initialize a dictionary to count occurrences of each attack label
     attack_counts = {label: 0 for label in known_ranges.keys()}
-    attack_counts['BENIGN'] = 0  # Add 'BENIGN' to the dictionary
+    attack_counts['BENIGN'] = 0  
 
-    # Read and process the CSV file using csv.reader
     with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
         reader = csv.reader(csvfile)
         writer = csv.writer(outfile)
 
-        # Reading the header and inserting the 'attack_label' column
+        # Read header
         header = next(reader)
 
-         # Identify indices of the columns to remove
-        columns_to_remove = [header.index(col) for col in ['last_seen', '_eventdate'] if col in header]
+        # Check '_eventdate' exist in header 
+        if '_eventdate' not in header:
+            print(f"Skipping file '{input_file}' - Missing '_eventdate' column")
+            return
 
-        # Remove the unwanted columns from the header
+        # 
+        columns_to_remove = [header.index(col) for col in ['last_seen'] if col in header]
+
+        eventdate_index = header.index('_eventdate') 
+        
+        # Update header (remove col)
         header = [col for idx, col in enumerate(header) if idx not in columns_to_remove]
-        header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
+        header.insert(0, 'attack_label')  
 
-
-        if os.path.getsize(output_file) == 0:  # Write header only if file is empty
+        if os.path.getsize(output_file) == 0:
             writer.writerow(header)
 
-        # Process each row
         for row in reader:
-            row_str = ','.join(row)  # Convert row to string to search for timestamp fields
+            # Check _eventdate is exist
+            if not row[eventdate_index].strip():
+                continue  
 
-            # Search for 'last_seen' and '_eventdate' formats in the row
-            match_last_seen = re.search(r'"last_seen":"(.+?)"', row_str)
-            match_eventdate = re.search(r'"_eventdate":"(.+?)"', row_str)
-            
-            if match_last_seen:
-                ts_value = match_last_seen.group(1)  # Extract the 'last_seen' timestamp string
-            elif match_eventdate:
-                ts_value = match_eventdate.group(1)  # Extract the '_eventdate' timestamp string
-            else:
-                ts_value = None
-            if ts_value:
-                try:
-                    unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
-                    attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
-                    attack_counts[attack_label] += 1  # Increment the count for the attack label
-                except ValueError as e:
-                    print(f"Error processing row: {e}")
-                    attack_label = 'BENIGN'
-                    attack_counts['BENIGN'] += 1  # Increment 'BENIGN' count
-            else:
-                attack_label = 'BENIGN'
-                attack_counts['BENIGN'] += 1  # Increment 'BENIGN' count
+            try:
+                unix_timestamp = datetime_string_to_epoch(row[eventdate_index])
+                attack_label = assign_attack_label(unix_timestamp)
+                attack_counts[attack_label] += 1
+            except ValueError as e:
+                print(f"Skipping row due to error: {e}")
+                continue  
 
-            # Remove the unwanted columns from the row BEFORE adding the label
+            # Remove col
             row = [value for idx, value in enumerate(row) if idx not in columns_to_remove]
 
-            # Insert the attack label at the beginning of the row
+            # Insert attack_label
             row.insert(0, attack_label)
-            # Write the modified row to the output file
             writer.writerow(row)
-            
+
     print("\nAttack label counts:")
     for label, count in attack_counts.items():
         print(f"{label}: {count}")

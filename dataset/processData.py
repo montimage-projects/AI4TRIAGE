@@ -1,101 +1,57 @@
-import csv
 import sys
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
 import pandas as pd
+import numpy as np
 
-# Function to convert a string to a float, handling errors
-def convert_to_float(value):
-    try:
-        return float(value.strip())
-    except ValueError:
-        return np.nan  # Return NaN for non-convertible values
-
-# Function to load and pad labeled data
-def load_and_pad_labeled_data(file_path):
-    rows = []
+# Function to process a CSV file in chunks
+def process_large_csv(input_file, output_file, chunksize=100000):
+    # Initialize an empty list to store processed chunks
+    processed_chunks = []
     
-    max_columns = 0
-    csv.field_size_limit(sys.maxsize)
-    # Read the CSV file and find the maximum number of columns
-    with open(file_path, 'rt') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            rows.append(row)
-            if len(row) > max_columns:
-                max_columns = len(row)
-        
+    # Read the CSV file in chunks
+    for chunk in pd.read_csv(input_file, chunksize=chunksize, low_memory=False):
+        # Drop columns where > 70% of values are missing
+        missing_ratio = chunk.isnull().mean()
+        columns_to_drop = missing_ratio[missing_ratio > 0.7].index
+        chunk.drop(columns=columns_to_drop, inplace=True)
 
-    # Pad rows with fewer columns with 'NaN' to match max_columns
-    padded_rows = []
-    for row in rows:
-        if len(row) < max_columns:
-            row += ['NaN'] * (max_columns - len(row))  # Pad with 'NaN'
-        padded_rows.append(row)
-    
-    return padded_rows, max_columns
+        # Identify numeric and categorical columns
+        numeric_columns = chunk.select_dtypes(include=['number']).columns
+        categorical_columns = chunk.select_dtypes(exclude=['number']).columns
 
-# Function to split labels and features
-def split_labels_and_features(padded_rows):
-    labels = []
-    features = []
-    
-    for row in padded_rows:
-        labels.append(row[0])  # First column is the label
-        feature_values = [convert_to_float(value) for value in row[1:]]  # Convert remaining columns to float
-        features.append(feature_values)
-    
-    return np.array(features), np.array(labels)
+        # Fill missing values in numeric columns with median
+        chunk[numeric_columns] = chunk[numeric_columns].fillna(chunk[numeric_columns].median())
 
+        # Fill missing values in categorical columns with mode
+        for col in categorical_columns:
+            if not chunk[col].dropna().empty:  # Ensure mode() calculation has non-empty values
+                mode_value = chunk[col].mode()[0]
+                chunk[col].fillna(mode_value, inplace=True)
+
+        # Encode categorical variables using factorization (memory-efficient)
+        for col in categorical_columns:
+            chunk[col] = pd.factorize(chunk[col])[0]
+
+        # Append the processed chunk to the list
+        processed_chunks.append(chunk)
+
+    # Concatenate all processed chunks into a single DataFrame
+    final_data = pd.concat(processed_chunks, ignore_index=True)
+
+    # Save the processed DataFrame to CSV
+    final_data.to_csv(output_file, index=False)
+    print(f"Processed data saved to {output_file}!")
+
+# Main function
 def main():
-    # Load and pad labeled data
     if len(sys.argv) < 3:
         print("Usage: python processData.py <input_csv_file> <output_csv_file>")
         sys.exit(1)
     
-    labeled_file=(sys.argv[1])   
-    output_file = (sys.argv[2])
- 
-    data, max_columns = load_and_pad_labeled_data(labeled_file)
-    data = pd.DataFrame(data)
-    # Assume the first column contains the labels
-    eventdate_column = data.iloc[:, 0]
-    data_without_first_column = data.iloc[:, 1:] 
-    # Calculate the missing value ratio for columns excluding the first
-    missing_ratio = data_without_first_column.isnull().mean()
-           
-    # Determine the threshold for dropping columns with majority missing values
-    threshold = 0.7  # Set threshold to 70%
-    columns_to_drop = missing_ratio[missing_ratio > threshold].index  # Find columns with missing ratio exceeding the threshold
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
 
-    # Drop these columns
-    data_cleaned = data.drop(columns=columns_to_drop)
-    data_cleaned.insert(0, 'attack_label', eventdate_column)
+    # Process the large CSV file efficiently
+    process_large_csv(input_file, output_file)
 
-    # Identify numeric and categorical columns in the remaining columns
-    numeric_columns = data_cleaned.select_dtypes(include=['number']).columns  # Find numeric columns
-    categorical_columns = data_cleaned.select_dtypes(exclude=['number']).columns  # Find categorical columns
-
-    # Fill missing values in numeric columns with median
-    for col in numeric_columns:
-        data_cleaned[col].fillna(data_cleaned[col].median(), inplace=True)  # Fill with median
-        
-    # Fill missing values in categorical columns with mode
-    for col in categorical_columns:
-        mode_value = data_cleaned[col].mode()[0]  # Calculate mode
-        data_cleaned[col] = data_cleaned[col].fillna(mode_value) # Fill with mode
-        
-    # Apply label encoding
-    label_encoder = LabelEncoder()  # Create LabelEncoder instance
-    for col in categorical_columns:
-        data_cleaned[col] = label_encoder.fit_transform(data_cleaned[col].astype(str))
- 
-    # data['eventdate'] = label_encoder.fit_transform(data['eventdate'].astype(str))  # Apply label encoding to categorical columns
-
-    # Save the processed DataFrame to a CSV file
-
-    data_cleaned.to_csv(output_file, index=False)
-    print(f"Processed data saved to {output_file}!")
 if __name__ == "__main__":
-    main()    
-
+    main()
