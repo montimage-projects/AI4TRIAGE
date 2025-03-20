@@ -49,27 +49,26 @@ def readFile(input_file,output_file):
         header = next(reader)
         timestamp_col = 3
         header.insert(0, 'attack_label')  # Insert 'attack_label' at the beginning
-        del header[timestamp_col + 1]
+        header[timestamp_col + 1] = 'timestamp'
+        
         if os.path.getsize(output_file) == 0:
             writer.writerow(header)
 
         for row in reader:
-            ts_value = row[timestamp_col]  #  the timestamp string
-            try:
-                unix_timestamp = datetime_string_to_epoch(ts_value)  # Convert to Unix timestamp
-                
-                #print (unix_timestamp)
+            if len(row) <= timestamp_col or not row[timestamp_col].strip():  
+                # Skip row if timestamp is missing
+                continue  
+
+            ts_value = row[timestamp_col].strip()  # Extract and clean timestamp string
+            unix_timestamp = datetime_string_to_epoch(ts_value)
+
+            if unix_timestamp is not None:
                 attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
                 row.insert(0, attack_label)
+                row[timestamp_col + 1] = unix_timestamp  # Replace timestamp column with Unix timestamp
                 attack_counts[attack_label] += 1
-
-            except ValueError as e:
-                row.insert(0, 'BENIGN')  # Insert 'BENIGN' if there's an error
-                attack_counts['BENIGN'] += 1 
-            # Convert updated_row back to a list and write to the output CSV
-            del row[timestamp_col + 1]
-            writer.writerow(row)
-        
+                writer.writerow(row)
+                
     print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
 
 

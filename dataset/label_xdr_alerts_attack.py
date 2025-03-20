@@ -21,6 +21,9 @@ known_ranges = {
     'ATTACK11': (1723028400, 1723032000)
 }
 
+attack_counts = {label: 0 for label in known_ranges.keys()}
+attack_counts['BENIGN'] = 0  # Add 'BENIGN' to the dictionary
+
 # Function to convert the different datetime formats to Unix epoch time
 def datetime_string_to_epoch(dtstring):
     try:
@@ -46,63 +49,43 @@ def assign_attack_label(unix_timestamp):
 def labelled_csv(input_file, output_file):
     csv.field_size_limit(sys.maxsize)
 
-    attack_counts = {label: 0 for label in known_ranges.keys()}
-    attack_counts['BENIGN'] = 0  
 
-    with open(input_file, 'rt') as csvfile, open(output_file, 'at') as outfile:
+    timestamp_col = 1  # Column index of the timestamp
+
+    with open(input_file, 'rt') as csvfile, open(output_file, 'at', newline='') as outfile:
         reader = csv.reader(csvfile)
         writer = csv.writer(outfile)
 
-        # Read header
+        # Read and modify header
         header = next(reader)
+        header.insert(0, 'attack_label')  # Insert attack_label as first column
+        header[timestamp_col + 1] = 'timestamp'  # Rename timestamp column
 
-        # Check '_eventdate' exist in header 
-        if '_eventdate' not in header:
-            print(f"Skipping file '{input_file}' - Missing '_eventdate' column")
-            return
-
-        # 
-        columns_to_remove = [header.index(col) for col in ['last_seen'] if col in header]
-
-        eventdate_index = header.index('_eventdate') 
-        
-        # Update header (remove col)
-        header = [col for idx, col in enumerate(header) if idx not in columns_to_remove]
-        header.insert(0, 'attack_label')  
-
+        # Write header only if file is empty
         if os.path.getsize(output_file) == 0:
             writer.writerow(header)
 
         for row in reader:
-            # Check _eventdate is exist
-            if not row[eventdate_index].strip():
+            if len(row) <= timestamp_col or not row[timestamp_col].strip():  
+                # Skip row if timestamp is missing
                 continue  
 
-            try:
-                unix_timestamp = datetime_string_to_epoch(row[eventdate_index])
-                attack_label = assign_attack_label(unix_timestamp)
+            ts_value = row[timestamp_col].strip()  # Extract and clean timestamp string
+            unix_timestamp = datetime_string_to_epoch(ts_value)
+
+            if unix_timestamp is not None:
+                attack_label = assign_attack_label(unix_timestamp)  # Assign attack label
+                row.insert(0, attack_label)
+                row[timestamp_col + 1] = unix_timestamp  # Replace timestamp column with Unix timestamp
                 attack_counts[attack_label] += 1
-            except ValueError as e:
-                print(f"Skipping row due to error: {e}")
-                continue  
-
-            # Remove col
-            row = [value for idx, value in enumerate(row) if idx not in columns_to_remove]
-
-            # Insert attack_label
-            row.insert(0, attack_label)
-            writer.writerow(row)
-
-    print("\nAttack label counts:")
-    for label, count in attack_counts.items():
-        print(f"{label}: {count}")
+                writer.writerow(row)
 
     print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
 
 def main():
     #output several file
     if len(sys.argv) < 3:
-        print("Usage: python <directory> <out_put>")
+        print("Usage: python <directory> <output_csv_file>")
         sys.exit(1)
     directory = sys.argv[1]
     # # Get all CSV files in the directory
