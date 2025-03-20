@@ -42,12 +42,13 @@ python dataset/label_xdr_alerts_attack.py Datasets/raw/xdr_alerts_attack_chunks/
 *Ensure each script completes successfully before moving on to the next step.*
 
 ### Step 3: Process the Data
-After labeling, process the data using:
+After labeling, process the data and then merge it using:
 ```bash
 python dataset/processData.py Datasets/labelled/firewall_labelled.csv Datasets/processed/firewall_processed.csv
 python dataset/processData.py Datasets/labelled/mail_labelled.csv Datasets/processed/mail_processed.csv
 python dataset/processData.py Datasets/labelled/proxy_labelled.csv Datasets/processed/proxy_processed.csv
 python dataset/processData.py Datasets/labelled/xdr_labelled.csv Datasets/processed/xdr_processed.csv
+python dataset/merge.py Datasets/processed/ Datasets/merged_log.csv
 ```
 This step cleans and prepares the dataset for model training.
 
