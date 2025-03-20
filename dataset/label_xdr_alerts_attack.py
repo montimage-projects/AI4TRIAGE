@@ -8,21 +8,21 @@ from dateutil import parser  # This library helps with ISO 8601 parsing
 
 # Define the known attack timestamp ranges (Unix epoch time)
 known_ranges = {
-    'ATTACK1': (1724921820, 1724922300),
-    'ATTACK2': (1724848560, 1724849760),
-    'ATTACK3': (1724846100, 1724847240),
-    'ATTACK4': (1724769420, 1724770080),
-    'ATTACK5': (1724767920, 1724768940),
-    'ATTACK6': (1724420820, 1724421660),
-    'ATTACK7': (1724411220, 1724411700),
-    'ATTACK8': (1724410200, 1724410620),
-    'ATTACK9': (1724334120, 1724334600),
-    'ATTACK10': (1724325240, 1724326440),
-    'ATTACK11': (1723028400, 1723032000)
+    1: (1724921820, 1724922300),
+    2: (1724848560, 1724849760),
+    3: (1724846100, 1724847240),
+    4: (1724769420, 1724770080),
+    5: (1724767920, 1724768940),
+    6: (1724420820, 1724421660),
+    7: (1724411220, 1724411700),
+    8: (1724410200, 1724410620),
+    9: (1724334120, 1724334600),
+    10: (1724325240, 1724326440),
+    11: (1723028400, 1723032000)
 }
 
 attack_counts = {label: 0 for label in known_ranges.keys()}
-attack_counts['BENIGN'] = 0  # Add 'BENIGN' to the dictionary
+attack_counts[0] = 0  # Add 'BENIGN' to the dictionary
 
 # Function to convert the different datetime formats to Unix epoch time
 def datetime_string_to_epoch(dtstring):
@@ -44,7 +44,7 @@ def assign_attack_label(unix_timestamp):
     for attack, (start, end) in known_ranges.items():
         if start <= unix_timestamp <= end:
             return attack
-    return 'BENIGN'
+    return 0
 
 def labelled_csv(input_file, output_file):
     csv.field_size_limit(sys.maxsize)
@@ -80,7 +80,9 @@ def labelled_csv(input_file, output_file):
                 attack_counts[attack_label] += 1
                 writer.writerow(row)
 
+
     print(f"CSV file '{input_file}' processed and saved as '{output_file}'!")
+
 
 def main():
     #output several file
@@ -99,7 +101,8 @@ def main():
     output_file = sys.argv[2]
     for file in csv_files:
         labelled_csv(file,output_file)
-
+    for attack_label, count in attack_counts.items():
+        print(f"Label {attack_label}: {count}")
 
 
 if __name__ == "__main__":
