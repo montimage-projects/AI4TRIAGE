@@ -22,9 +22,7 @@ This project processes attack logs, labels the data, and trains a model using th
 
 ### Step 2: Labeling the Data
 Run each of the following scripts to label different types of logs:
-```
-cd dataset
-```
+
 - **Firewall Attacks:**
 ```bash
 python dataset/label_attack_firewall.py Datasets/raw/firewall_attack_chunks/ Datasets/labelled/firewall_labelled.csv
