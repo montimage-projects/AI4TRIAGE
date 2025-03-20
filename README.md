@@ -55,7 +55,7 @@ This step cleans and prepares the dataset for model training.
 ### Step 4: Train the Model
 Train the KNN model using:
 ```bash
-python dataset/KNN_normalized.py Datasets/process/ Datasets/merged_log.csv
+python dataset/KNN_normalized.py Datasets/merged_log.csv
 ```
 This script uses the processed data to train the model.
 
