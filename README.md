@@ -7,7 +7,7 @@ This project processes attack logs, labels the data, and trains a model using th
 ## Prerequisites
 
 - **Python 3.x** - Ensure you have Python installed.
-- **Create env*
+- **Create env**
   ```bash
   python3 -m venv myenv
   source myenv/bin/activate
