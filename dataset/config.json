@@ -1,0 +1,117 @@
+{
+    "find_features": {
+        "param_grid": {
+            "n_estimators": [
+                50,
+                100,
+                150,
+                200
+            ],
+            "max_depth": [
+                null,
+                10,
+                20
+            ],
+            "random_state": [
+                42
+            ]
+        },
+        "firewall_processed": {
+            "best_params": {
+                "max_depth": 10,
+                "n_estimators": 100,
+                "random_state": 42
+            }
+        },
+        "proxy_processed": {
+            "best_params": {
+                "max_depth": null,
+                "n_estimators": 150,
+                "random_state": 42
+            }
+        },
+        "xdr_processed": {
+            "best_params": {
+                "max_depth": null,
+                "n_estimators": 100,
+                "random_state": 42
+            }
+        },
+        "mail_processed": {
+            "best_params": {
+                "max_depth": 10,
+                "n_estimators": 50,
+                "random_state": 42
+            }
+        }
+    },
+    "KNN_normalized": {
+        "n_neighbors": 3,
+        "weights": "distance",
+        "metric": "manhattan",
+        "param_grid": {
+            "n_neighbors": [
+                3,
+                5,
+                7,
+                9
+            ],
+            "weights": [
+                "uniform",
+                "distance"
+            ],
+            "metric": [
+                "euclidean",
+                "manhattan",
+                "chebyshev",
+                "minkowski"
+            ]
+        }
+    },
+    "known_ranges": {
+        "1": [
+            1724921820,
+            1724922300
+        ],
+        "2": [
+            1724848560,
+            1724849760
+        ],
+        "3": [
+            1724846100,
+            1724847240
+        ],
+        "4": [
+            1724769420,
+            1724770080
+        ],
+        "5": [
+            1724767920,
+            1724768940
+        ],
+        "6": [
+            1724420820,
+            1724421660
+        ],
+        "7": [
+            1724411220,
+            1724411700
+        ],
+        "8": [
+            1724410200,
+            1724410620
+        ],
+        "9": [
+            1724334120,
+            1724334600
+        ],
+        "10": [
+            1724325240,
+            1724326440
+        ],
+        "11": [
+            1723028400,
+            1723032000
+        ]
+    }
+}
