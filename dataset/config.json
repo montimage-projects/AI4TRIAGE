@@ -113,5 +113,17 @@
             1723028400,
             1723032000
         ]
+    },
+    "time_column": {
+        "firewall": "eventdate",
+        "mail": "ts",
+        "proxy": "timestamp",
+        "xdr": "_eventdate"
+    },
+    "time_formats": {
+        "firewall": "%Y-%m-%d %H:%M:%S.%f",
+        "mail": "%Y-%m-%dT%H:%M:%S.%f%z",
+        "proxy": "%a %b %d %H:%M:%S %Y",
+        "xdr": ""
     }
 }
