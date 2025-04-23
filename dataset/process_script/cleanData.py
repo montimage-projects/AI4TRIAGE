@@ -11,9 +11,8 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Directories
-RAW_DIR = "/home/montimage/anhhaobui/cbx/AI4TRIAGE/Datasets/raw/"
-CLEANED_DIR = "/home/montimage/anhhaobui/cbx/AI4TRIAGE/Datasets/cleaned/"
-PROCESSED_DIR = "/home/montimage/anhhaobui/cbx/AI4TRIAGE/Datasets/processed/"
+RAW_DIR = "Datasets/raw/"
+CLEANED_DIR = "Datasets/cleaned/"
 
 # Subdirectories for raw data
 SUBDIRECTORIES = ["firewall_attack_chunks", "mail_attack_chunks", "proxy_attack_chunks", "xdr_alerts_attack_chunks"]
@@ -185,7 +184,7 @@ def first_pass(subdir, chunksize=100000):
     logging.info("First pass completed: Global statistics computed")
     return stats
 
-def second_pass(subdir, stats, output_dir, chunksize=100000, missing_threshold=0.85):
+def second_pass(subdir, stats, chunksize=100000, missing_threshold=0.85):
     """Second pass: Apply transformations using precomputed statistics"""
     logging.info(f"Starting second pass for {subdir}: Applying transformations...")
     
@@ -314,7 +313,7 @@ def main():
             stats = first_pass(subdir)
             
             # Second pass: Apply transformations
-            processed_data = second_pass(subdir, stats, PROCESSED_DIR)
+            processed_data = second_pass(subdir, stats)
             
             if not processed_data.empty:
                 # Save processed data
