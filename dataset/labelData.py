@@ -188,26 +188,43 @@ def process_file(file: str, output_file: str, config: Dict[str, Any], chunksize:
 def main():
     try:
         if len(sys.argv) < 3:
-            print("Usage: python labelData.py <input_path> <output_file>")
+            print("Usage: python labelData.py <input_path> <output_path>")
             sys.exit(1)
         input_path = sys.argv[1]
-        output_file = sys.argv[2]
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        output_path = sys.argv[2]  # This can be a file or a directory
+
+        config = load_config()
         files = validate_input(input_path)
         logging.info(f"Found {len(files)} file(s) to process.")
-        config = load_config()
-        
+
         total_rows = 0
         aggregated_labels = {}
-        for f in files:
+
+        # If input_path is a directory, then treat output_path as a directory
+        if os.path.isdir(input_path):
+            os.makedirs(output_path, exist_ok=True)
+            for f in files:
+                basename = os.path.basename(f)
+                # Replace "cleaned" with "labelled" in the filename
+                out_file = os.path.join(output_path, basename.replace("cleaned", "labelled"))
+                try:
+                    rows, label_counts = process_file(f, out_file, config)
+                    total_rows += rows
+                    for label, count in label_counts.items():
+                        aggregated_labels[label] = aggregated_labels.get(label, 0) + count
+                except Exception as e:
+                    logging.error(f"Failed processing {f}: {e}")
+                    continue
+        else:
+            # Input is a single file; ensure the output directory exists.
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
             try:
-                rows, label_counts = process_file(f, output_file, config)
+                rows, label_counts = process_file(input_path, output_path, config)
                 total_rows += rows
                 for label, count in label_counts.items():
                     aggregated_labels[label] = aggregated_labels.get(label, 0) + count
             except Exception as e:
-                logging.error(f"Failed processing {f}: {e}")
-                continue
+                logging.error(f"Failed processing {input_path}: {e}")
 
         logging.info(f"Total rows processed: {total_rows}")
         for label, count in aggregated_labels.items():

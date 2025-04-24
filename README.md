@@ -25,39 +25,46 @@ This project processes attack logs, labels the data, and trains a model using th
 - **Destination:** Save the file in the following directory: Datasets/raw/
   *(Make sure the `Datasets/raw/` directory exists; if not, create it.)*
 
-### Step 2: Labeling the Data
-Run each of the following scripts to label different types of logs:
+### Step 2: Clean the Raw Data
+Run the script to clean logs:
+```bash
+python dataset/process_script/cleanData.py 
+```
+To clean a specific log type (e.g., firewall, mail, xdr, proxy), use:
+```bash
+python dataset/process_script/cleanData.py firewall
+```
+*(Make sure the `Datasets/cleaned/` directory exists; if not, create it.)*
 
-- **Firewall Attacks:**
+### Step 3: Label the Cleaned Data
+Label all cleaned logs:
 ```bash
-python dataset/label_attack_firewall.py Datasets/raw/firewall_attack_chunks/ Datasets/labelled/firewall_labelled.csv
+python dataset/labelData.py Datasets/cleaned/ Datasets/labelled/
 ```
-- **Mail Attacks:**
+Or, label specific logs:
 ```bash
-python dataset/label_mail_attack.py Datasets/raw/mail_attack_chunks/ Datasets/labelled/mail_labelled.csv
+python dataset/labelData.py Dataset/cleaned/firewall_cleaned.csv Dataset/labelled/firewall_labelled.csv
 ```
-- **Proxy Attacks:**
-```bash
-python dataset/label_proxy_attack.py Datasets/raw/proxy_attack_chunks/ Datasets/labelled/proxy_labelled.csv
-```
-- **XDR Alerts Attacks:**
-```bash
-python dataset/label_xdr_alerts_attack.py Datasets/raw/xdr_alerts_attack_chunks/ Datasets/labelled/xdr_labelled.csv
-```
+*(Make sure the `Datasets/labelled/` directory exists; if not, create it.)*
+
 *Ensure each script completes successfully before moving on to the next step.*
 
-### Step 3: Process the Data
-After labeling, process the data and then merge it using:
+### Step 4: Process the Data
+Process each labelled log:
 ```bash
-python dataset/processData.py Datasets/labelled/firewall_labelled.csv Datasets/processed/firewall_processed.csv
-python dataset/processData.py Datasets/labelled/mail_labelled.csv Datasets/processed/mail_processed.csv
-python dataset/processData.py Datasets/labelled/proxy_labelled.csv Datasets/processed/proxy_processed.csv
-python dataset/processData.py Datasets/labelled/xdr_labelled.csv Datasets/processed/xdr_processed.csv
-python dataset/merge.py Datasets/processed/ Datasets/merged_log.csv
-```
-This step cleans and prepares the dataset for model training.
+python dataset/process_script/post_label_process.py Datasets/labelled/firewall_labelled.csv Datasets/processed/firewall_processed.csv
+python dataset/process_script/post_label_process.py Datasets/labelled/mail_labelled.csv Datasets/processed/mail_processed.csv
+python dataset/process_script/post_label_process.py Datasets/labelled/proxy_labelled.csv Datasets/processed/proxy_processed.csv
+python dataset/process_script/post_label_process.py Datasets/labelled/xdr_labelled.csv Datasets/processed/xdr_processed.csv
 
-### Step 4: Train the Model
+```
+Merge all processed logs into one file:
+```bash
+python dataset/process_script/merge.py Datasets/processed/ Datasets/merged_log.csv
+```
+This step prepares the dataset for model training.
+
+### Step 5: Train the Model
 Train the KNN model using:
 ```bash
 python dataset/KNN_normalized.py Datasets/merged_log.csv
