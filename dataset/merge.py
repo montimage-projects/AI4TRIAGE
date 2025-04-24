@@ -5,7 +5,8 @@ import glob
 def merge_processed_logs(input_folder, output_file):
     """
     Merges all processed CSV files into a single dataset.
-    Assumes all files have a standardized structure (same columns, including 'timestamp').
+    Assumes all files have a standardized structure. The merged data is sorted by
+    the 'timestamp' column and then the column is removed.
     """
     all_files = glob.glob(f"{input_folder}/*.csv")
     if not all_files:
@@ -20,9 +21,13 @@ def merge_processed_logs(input_folder, output_file):
     # Sort data by timestamp (important for attack sequence detection)
     merged_data.sort_values(by="timestamp", inplace=True)
 
+    # Remove 'timestamp' column
+    if "timestamp" in merged_data.columns:
+        merged_data = merged_data.drop("timestamp", axis=1)
+
     # Save the merged dataset
     merged_data.to_csv(output_file, index=False)
-    print(f" Merged dataset saved to {output_file}")
+    print(f"Merged dataset saved to {output_file}")
 
 # Main function
 if __name__ == "__main__":
