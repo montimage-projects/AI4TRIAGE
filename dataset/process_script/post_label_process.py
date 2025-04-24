@@ -1,3 +1,4 @@
+import os
 import sys
 import pandas as pd
 import numpy as np
@@ -239,6 +240,11 @@ def main():
     output_file = sys.argv[2]
 
     try:
+        # Create output directory if it doesn't exist
+        output_dir = os.path.dirname(output_file)
+        if output_dir:  # Only create dir if output_file has a directory part
+            os.makedirs(output_dir, exist_ok=True)
+            
         stats = first_pass(input_file)
         second_pass(input_file, output_file, stats)
         logging.info("Processing completed successfully")

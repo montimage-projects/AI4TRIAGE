@@ -34,7 +34,6 @@ To clean a specific log type (e.g., firewall, mail, xdr, proxy), use:
 ```bash
 python dataset/process_script/cleanData.py firewall
 ```
-*(Make sure the `Datasets/cleaned/` directory exists; if not, create it.)*
 
 ### Step 3: Label the Cleaned Data
 Label all cleaned logs:
@@ -45,7 +44,6 @@ Or, label specific logs:
 ```bash
 python dataset/labelData.py Dataset/cleaned/firewall_cleaned.csv Dataset/labelled/firewall_labelled.csv
 ```
-*(Make sure the `Datasets/labelled/` directory exists; if not, create it.)*
 
 *Ensure each script completes successfully before moving on to the next step.*
 
@@ -56,8 +54,8 @@ python dataset/process_script/post_label_process.py Datasets/labelled/firewall_l
 python dataset/process_script/post_label_process.py Datasets/labelled/mail_labelled.csv Datasets/processed/mail_processed.csv
 python dataset/process_script/post_label_process.py Datasets/labelled/proxy_labelled.csv Datasets/processed/proxy_processed.csv
 python dataset/process_script/post_label_process.py Datasets/labelled/xdr_labelled.csv Datasets/processed/xdr_processed.csv
-
 ```
+
 Merge all processed logs into one file:
 ```bash
 python dataset/process_script/merge.py Datasets/processed/ Datasets/merged_log.csv
