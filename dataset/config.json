@@ -116,14 +116,34 @@
     },
     "time_column": {
         "firewall": "eventdate",
+        "netskop": "timestamp",
+        "proofpoint": "ts",
+        "cortex": "_eventdate",
+        "customtype": "custom_time",
         "mail": "ts",
         "proxy": "timestamp",
         "xdr": "_eventdate"
     },
     "time_formats": {
         "firewall": "%Y-%m-%d %H:%M:%S.%f",
-        "mail": "%Y-%m-%dT%H:%M:%S.%f%z",
-        "proxy": "%a %b %d %H:%M:%S %Y",
-        "xdr": ""
-    }
+        "netskop": "timestamp",
+        "proofpoint": "%Y-%m-%d %H:%M:%S.%f%z",
+        "cortex": "%Y-%m-%d %H:%M:%S.%f"
+    },
+    "RAW_DIR": "Datasets/raw/",
+    "CLEANED_DIR": "Datasets/cleaned/",
+    "SUBDIRECTORIES": ["firewall_attack_chunks", "cortex_attack_chunks", "proofpoint_attack_chunks", "netskop_attack_chunks"],
+    "CSV_SEPARATOR": "|",
+    "LOG_TYPE_MAPPING": {
+        "firewall_attack_chunks": "firewall",
+        "mail_attack_chunks": "mail",
+        "proxy_attack_chunks": "proxy",
+        "xdr_alerts_attack_chunks": "xdr",
+        "custom_log_folder": "customtype",
+        "cortex_attack_chunks": "cortex",
+        "proofpoint_attack_chunks": "proofpoint",
+        "netskop_attack_chunks": "netskop"
+    },
+    "CHUNKSIZE": 100000,
+    "MISSING_THRESHOLD": 0.95
 }

@@ -9,6 +9,7 @@ from collections import defaultdict
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline
+import re
 
 # Configure logging
 logging.basicConfig(
@@ -159,8 +160,16 @@ def second_pass(input_file: str, output_file: str, stats: PostLabelStatistics,
     
     # After processing all chunks
     if not processed_chunks:
-        logging.error("No objects to concatenate: processed_chunks is empty. Check filtering criteria!")
-        sys.exit("No objects to concatenate")
+        logging.warning("No objects to concatenate: processed_chunks is empty. Writing empty output file.")
+        # Try to get columns from the input file
+        try:
+            columns = pd.read_csv(input_file, nrows=0).columns
+        except Exception:
+            columns = []
+        empty_df = pd.DataFrame(columns=columns)
+        empty_df.to_csv(output_file, index=False)
+        logging.info(f"Empty output file saved to {output_file}")
+        return
     final_data = pd.concat(processed_chunks, ignore_index=True)
     
     # NEW BALANCING APPROACH:
@@ -233,20 +242,46 @@ def second_pass(input_file: str, output_file: str, stats: PostLabelStatistics,
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage: python post_label_process.py <input_labeled_csv> <output_processed_csv>")
+        print("Usage: python post_label_process.py <input_labeled_csv_or_dir> <output_processed_dir>")
         sys.exit(1)
 
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
+    input_path = sys.argv[1]
+    output_dir = sys.argv[2]
 
     try:
-        # Create output directory if it doesn't exist
-        output_dir = os.path.dirname(output_file)
-        if output_dir:  # Only create dir if output_file has a directory part
-            os.makedirs(output_dir, exist_ok=True)
-            
-        stats = first_pass(input_file)
-        second_pass(input_file, output_file, stats)
+        os.makedirs(output_dir, exist_ok=True)
+
+        def make_processed_name(filename):
+            base = os.path.basename(filename)
+            # Replace 'cleaned' or 'labelled' (case-insensitive) with 'processed'
+            new_base = re.sub(r'(cleaned|labelled)', 'processed', base, flags=re.IGNORECASE)
+            if new_base == base:
+                # If neither found, just add _processed before .csv
+                if base.lower().endswith('.csv'):
+                    new_base = base[:-4] + '_processed.csv'
+                else:
+                    new_base = base + '_processed'
+            return os.path.join(output_dir, new_base)
+
+        if os.path.isdir(input_path):
+            print("Files in directory:", os.listdir(input_path))
+            csv_files = [os.path.join(input_path, f) for f in os.listdir(input_path) if f.lower().endswith('.csv')]
+            print("CSV files to process:", csv_files)
+            if not csv_files:
+                logging.error(f"No CSV files found in directory: {input_path}")
+                sys.exit(1)
+            logging.info(f"Processing {len(csv_files)} CSV files from directory: {input_path}")
+            for csv_file in csv_files:
+                output_file = make_processed_name(csv_file)
+                stats = first_pass(csv_file)
+                second_pass(csv_file, output_file, stats)
+                logging.info(f"Processed {csv_file} -> {output_file}")
+        else:
+            output_file = make_processed_name(input_path)
+            stats = first_pass(input_path)
+            second_pass(input_path, output_file, stats)
+            logging.info(f"Processed {input_path} -> {output_file}")
+
         logging.info("Processing completed successfully")
     except Exception as e:
         logging.error(f"Error during processing: {str(e)}")
