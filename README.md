@@ -189,6 +189,8 @@ python dataset/process_script/merge.py Datasets/processed/ Datasets/merged_log.c
 python dataset/KNN_normalized.py Datasets/merged_log.csv
 # To classify new logs (after preprocessing and merging):
 python dataset/classify_logs.py Datasets/merged_new_log.csv Datasets/predicted_new_log.csv knn_model.joblib
+node ai4triage.js Datasets/predicted_new_log.csv
+node testConsumer.js
 ```
 
 ---
