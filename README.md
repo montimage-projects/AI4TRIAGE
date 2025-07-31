@@ -113,7 +113,7 @@ This script uses the processed and merged data to train the model.
 
 ---
 
-## Step 7: Classify New Log Files
+### Step 7: Classify New Log Files
 
 If you have new log files (any log type), always preprocess and merge them as above before classification.
 
@@ -133,17 +133,39 @@ If you have new log files (any log type), always preprocess and merge them as ab
 
 2. **Merge all processed logs (including new ones):**
    ```bash
-   python dataset/process_script/merge.py Datasets/processed/ Datasets/merged_log.csv
+   python dataset/process_script/merge.py Datasets/processed/ Datasets/merged_new_log.csv
    ```
 
 3. **Classify the merged log file:**
    ```bash
-   python dataset/classify_logs.py Datasets/merged_log.csv Datasets/classed_log.csv knn_model.joblib
+   python dataset/classify_logs.py Datasets/merged_new_log.csv Datasets/predicted_new_log.csv knn_model.joblib
    ```
    The output file will have an additional column `predicted_label` with the predicted class for each log entry.
 
 ---
+### Step 8: Generate STIX Alerts and Send to Kafka
+ai4triage.js eads the classified log file (e.g., predicted_new_log.csv), converts entries to STIX format, and sends them to a Kafka topic.
+   ```bash
+   node ai4triage.js Datasets/predicted_new_log.csv
+   ```
+Make sure Kafka is running and accessible on the configured port.
 
+---
+### Step 9 (Optional): Run testConsumer.js to Monitor Kafka Topic
+Use this consumer script to subscribe to the Kafka topic and view the published STIX alerts:
+
+   ```bash
+   node testConsumer.js
+   ```
+Make sure Kafka is running and accessible on the configured port.
+
+---
+### Step 10 : View Alerts on the AI4TRIAGE Dashboard
+Visualize alerts using the web-based dashboard:
+🔗 [AI4TRIAGE-Dashboard on GitHub](https://github.com/montimage-projects/AI4TRIAGE-Dashboard).
+Follow the setup instructions in the dashboard repository to run the frontend locally or on a server.
+
+---
 ## Troubleshooting
 
 - **Dataset Not Found:** Verify that the CSV file is in the `Datasets/raw/` folder.
@@ -167,6 +189,8 @@ python dataset/process_script/merge.py Datasets/processed/ Datasets/merged_log.c
 python dataset/KNN_normalized.py Datasets/merged_log.csv
 # To classify new logs (after preprocessing and merging):
 python dataset/classify_logs.py Datasets/merged_new_log.csv Datasets/predicted_new_log.csv knn_model.joblib
+node ai4triage.js Datasets/predicted_new_log.csv
+node testConsumer.js
 ```
 
 ---
